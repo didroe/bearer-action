@@ -1,0 +1,27 @@
+on: workflow_dispatch
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          repository: bearer/bear-publishing
+      - id: report
+        name: Scan
+        uses: bearer/bearer-action@feat/allow-version-specification
+        with:
+          version: v1.3.1
+          only-rule: ruby_rails_logger
+      - id: summary
+        name: Display Summary
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // github does not support multiline outputs so report is encoded
+            const report = decodeURIComponent(`${{ steps.report.outputs.rule_breaches }}`);
+            const passed = `${{ steps.report.outputs.exit_code }}` == "0";
+            if(!passed){ core.setFailed(report); }
